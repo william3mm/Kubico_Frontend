@@ -1,0 +1,209 @@
+/* =========================================================
+   WRAP DAS TELAS DE AUTH
+   ========================================================= */
+.auth-wrap {
+  min-height: calc(100vh - 14rem);
+  display: grid;
+  place-items: center;
+  padding-block: var(--space-8);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 28rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  padding: var(--space-6);
+}
+@media (min-width: 40rem) {
+  .auth-card {
+    padding: var(--space-8);
+  }
+}
+
+.auth-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.auth-subtitle {
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.auth-body {
+  margin-top: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.auth-foot {
+  margin-top: var(--space-5);
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.auth-foot a {
+  font-weight: 600;
+  color: var(--brand);
+}
+
+/* Linha entre "Esqueci-me" e o rótulo da senha */
+.auth-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.375rem;
+}
+.auth-label-row .field__label {
+  margin-bottom: 0;
+}
+.auth-label-row a {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+/* =========================================================
+   FORÇA DA SENHA
+   ========================================================= */
+.pw-strength {
+  display: flex;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+.pw-strength span {
+  flex: 1;
+  height: 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--line);
+}
+.pw-strength span.is-on {
+  background: var(--brand);
+}
+
+/* =========================================================
+   CARTÕES DE PERFIL (criar conta)
+   ========================================================= */
+.perfil-opt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-inline: 1rem;
+  min-height: 64px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+.perfil-opt.is-on {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.perfil-opt__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--brand);
+  flex-shrink: 0;
+}
+.perfil-opt__title {
+  display: block;
+  font-weight: 700;
+  line-height: 1.2;
+  font-size: 0.9375rem;
+}
+.perfil-opt__desc {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.125rem;
+}
+
+/* =========================================================
+   PASSOS (recuperar conta)
+   ========================================================= */
+.steps {
+  display: flex;
+  gap: 0.375rem;
+  margin-bottom: var(--space-6);
+}
+.steps span {
+  flex: 1;
+  height: 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--line);
+}
+.steps span.is-on {
+  background: var(--brand);
+}
+
+/* =========================================================
+   OTP — 6 caixas
+   ========================================================= */
+.otp-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+}
+.otp-row input {
+  width: 100%;
+  min-height: 52px;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 800;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  outline: none;
+  padding: 0;
+}
+.otp-row input:focus {
+  border-color: var(--brand);
+  background: var(--card);
+}
+
+/* No telemóvel muito estreito, reduz ligeiramente */
+@media (max-width: 22rem) {
+  .otp-row {
+    gap: 0.25rem;
+  }
+  .otp-row input {
+    font-size: 1.125rem;
+    min-height: 46px;
+  }
+}
+
+/* =========================================================
+   CHECKBOX LINHA (termos, manter sessão)
+   ========================================================= */
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  cursor: pointer;
+  padding-block: 0.25rem;
+}
+.check-row input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  accent-color: var(--brand);
+}
+.check-row .muted {
+  color: var(--muted);
+}

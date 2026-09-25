@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-AO">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Kubiko — Imóveis em Angola</title>
+    <meta
+      name="description"
+      content="Arrenda ou compra casa em Angola directamente com o proprietário. Sem intermediários."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <!-- =========================================================
+         HEADER
+         ========================================================= -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="#/" class="brand" aria-label="Kubiko, página inicial">
+          <span class="brand-mark">K</span>
+          <span class="brand-name">Kubiko</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Principal">
+          <a href="#/imoveis?transacao=arrendar">Arrendar</a>
+          <a href="#/imoveis?transacao=comprar">Comprar</a>
+          <a href="#/imoveis">Todos os imóveis</a>
+        </nav>
+
+        <div class="header-account" id="header-conta">
+          <!-- O JS preenche com:
+               - botões "Entrar" / "Criar conta" quando não há sessão
+               - avatar + nome quando há sessão -->
+        </div>
+      </div>
+    </header>
+
+    <!-- =========================================================
+         CONTEÚDO PRINCIPAL (renderizado pelo router)
+         ========================================================= -->
+    <main id="app" class="app-main"></main>
+
+    <!-- =========================================================
+         FOOTER
+         ========================================================= -->
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div>
+          <div class="brand small">
+            <span class="brand-mark">K</span>
+            <span class="brand-name">Kubiko</span>
+          </div>
+          <p class="muted">
+            Casas para arrendar e comprar em Angola, directamente com quem é
+            dono.
+          </p>
+        </div>
+
+        <div>
+          <p class="footer-title">Procurar</p>
+          <ul class="footer-list">
+            <li>
+              <a href="#/imoveis?transacao=arrendar">Arrendamento em Luanda</a>
+            </li>
+            <li><a href="#/imoveis?transacao=comprar">Casas à venda</a></li>
+            <li><a href="#/imoveis?zona=Talatona">Talatona</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <p class="footer-title">Anunciar</p>
+          <ul class="footer-list">
+            <li><a href="#/publicar">Publicar o meu imóvel</a></li>
+            <li><a href="#/imoveis">Como funciona a verificação</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        © <span id="ano"></span> Kubiko · Luanda, Angola
+      </div>
+    </footer>
+
+    <!-- =========================================================
+         TABBAR INFERIOR (só aparece em mobile, quando há sessão)
+         ========================================================= -->
+    <nav
+      id="tabbar"
+      class="tabbar"
+      hidden
+      aria-label="Navegação principal"
+    ></nav>
+
+    <!-- =========================================================
+         ENTRADA DA APLICAÇÃO
+         ========================================================= -->
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
