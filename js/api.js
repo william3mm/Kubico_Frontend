@@ -28,6 +28,7 @@ export async function fetchApi(
   return dados;
 }
 
+/* Listar imóveis com filtros */
 export async function listarImoveis(filtros = {}) {
   const params = new URLSearchParams();
   for (const [chave, valor] of Object.entries(filtros)) {
@@ -37,7 +38,9 @@ export async function listarImoveis(filtros = {}) {
   return fetchApi(ROTAS_API.imoveis + (query ? "?" + query : ""));
 }
 
+/* Atalhos por endpoint */
 export const api = {
+  // ─── Autenticação ───
   entrar: (corpo) => fetchApi(ROTAS_API.entrar, { metodo: "POST", corpo }),
   registar: (corpo) => fetchApi(ROTAS_API.registar, { metodo: "POST", corpo }),
   recuperar: (destino) =>
@@ -53,11 +56,18 @@ export const api = {
       corpo: { destino, codigo, senha },
     }),
 
-  // Imóveis
+  // ─── Imóveis ───
+  imoveis: () => fetchApi(ROTAS_API.imoveis),
+
+  buscarImovel: async (id) => {
+    const r = await fetchApi(`${ROTAS_API.imoveis}/${encodeURIComponent(id)}`);
+    return r.imovel || r;
+  },
+
   publicar: (corpo) => fetchApi(ROTAS_API.imoveis, { metodo: "POST", corpo }),
   publicarConteudo: (formData) =>
     fetchApi(ROTAS_API.imoveis, { metodo: "POST", formData }),
 
-  // Municipios
+  // ─── Localização ───
   municipios: () => fetchApi(ROTAS_API.municipios),
 };

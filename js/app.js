@@ -1,4 +1,3 @@
-import { state } from "./state.js";
 import { $ } from "./utils.js";
 import { desenharHeader, desenharTabbar } from "./components/header.js";
 import { vistaInicio } from "./views/home.js";

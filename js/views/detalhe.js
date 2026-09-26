@@ -1,8 +1,13 @@
-import { state } from "../state.js";
 import { $, $$, esc, toast } from "../utils.js";
-import { fotos, precoFormatado, skeletonCards } from "../components/cards.js";
+import {
+  fotos,
+  precoFormatado,
+  skeletonCards,
+  urlFoto,
+} from "../components/cards.js";
 import { empty } from "../components/feedback.js";
 import { CONFIG } from "../config.js";
+import { api } from "../api.js";
 
 const ICONES = {
   local:
@@ -13,34 +18,51 @@ const ICONES = {
     '<path d="M4 12h16v4a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M7 12V6a2 2 0 1 1 4 0"/>',
   area: '<path d="M4 4h16v16H4z"/><path d="M9 4v16M4 9h16"/>',
 };
-const ico = (d, cls = "w-4 h-4") =>
-  `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-        aria-hidden="true">${d}</svg>`;
+
+const ico = (d, size = 16) =>
+  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+        stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0">${d}</svg>`;
 
 const SELO = `
   <span class="badge--verified">
-    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M12 1.6l2.5 2.1 3.2-.4 1 3.1 2.8 1.6-1.1 3 1.1 3-2.8 1.6-1 3.1-3.2-.4L12 22.4l-2.5-2.1-3.2.4-1-3.1L2.5 16l1.1-3-1.1-3 2.8-1.6 1-3.1 3.2.4z"/>
       <path d="M10.6 15.4l-2.9-2.9 1.3-1.3 1.6 1.6 4-4 1.3 1.3z" fill="#fff"/>
     </svg>
     Verificado
   </span>`;
 
-const iconeWA = () => `
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+const iconeWA = (size = 20) => `
+  <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <path d="M12.04 2C6.6 2 2.2 6.4 2.2 11.84c0 1.74.46 3.44 1.32 4.94L2 22l5.36-1.4a9.8 9.8 0 0 0 4.68 1.2h.01c5.43 0 9.84-4.4 9.84-9.84S17.47 2 12.04 2m5.72 13.9c-.24.68-1.4 1.3-1.93 1.35-.5.05-.96.23-2.7-.56-2.1-.95-3.42-3.14-3.53-3.28-.1-.15-.85-1.16-.85-2.22 0-1.05.55-1.57.75-1.79.2-.22.43-.27.57-.27h.41c.13 0 .32-.05.49.38.17.44.6 1.5.65 1.6.05.11.08.24.01.38-.07.15-.13.24-.26.38l-.2.23c-.13.13-.27.28-.12.53.15.25.66 1.1 1.42 1.78.97.87 1.5 1.02 1.74 1.14.18.1.33.08.46-.05.15-.15.53-.62.68-.83.14-.22.29-.18.48-.11.2.07 1.24.6 1.46.71.21.11.35.16.4.25.05.1.05.56-.19 1.23"/>
   </svg>`;
 
-export function vistaDetalhe(id) {
+export async function vistaDetalhe(id) {
   const app = $("#app");
 
-  if (!state.carregado) {
-    app.innerHTML = `<div style="padding-top:var(--space-6)">${skeletonCards(1)}</div>`;
+  // 1. Skeleton
+  app.innerHTML = `<div style="padding-top:var(--space-6)">${skeletonCards(1)}</div>`;
+
+  // 2. Pedir o imóvel ao backend
+  let im;
+  try {
+    im = await api.buscarImovel(id);
+  } catch (erro) {
+    console.error("Erro ao carregar imóvel:", erro);
+
+    app.innerHTML = `
+      <div style="padding-top:var(--space-8)">
+        ${empty({
+          titulo: "Imóvel não encontrado",
+          texto:
+            "Este anúncio pode ter sido retirado ou já não está disponível.",
+          cta: '<a href="#/imoveis" class="btn btn-primary">Ver outros imóveis</a>',
+        })}
+      </div>`;
     return;
   }
 
-  const im = state.imoveis.find((i) => String(i.id) === String(id));
   if (!im) {
     app.innerHTML = `
       <div style="padding-top:var(--space-8)">
@@ -55,12 +77,16 @@ export function vistaDetalhe(id) {
 
   const f = fotos(im);
   const infra = Array.isArray(im.infraestruturas) ? im.infraestruturas : [];
+  const municipioNome = im.municipio?.nome || im.municipio || "";
 
+  // 3. Mensagem WhatsApp
   const msg = encodeURIComponent(
     `Olá! Vi este imóvel no ${CONFIG.SITE} e quero mais informações.\n\n` +
       `📌 Ref. #${im.id} — ${im.titulo}\n` +
-      `📍 ${im.zona}${im.municipio ? ", " + im.municipio : ""}\n` +
-      `💰 ${CONFIG.MOEDA} ${(Number(im.preco) || 0).toLocaleString("pt-AO")}${im.transacao === "arrendar" ? "/mês" : ""}\n` +
+      `📍 ${im.zona}${municipioNome ? ", " + municipioNome : ""}\n` +
+      `💰 ${CONFIG.MOEDA} ${(Number(im.preco) || 0).toLocaleString("pt-AO")}${
+        im.tipoTransacao === "ARRENDAMENTO" ? "/mês" : ""
+      }\n` +
       `🔗 ${location.origin}${location.pathname}#/imovel/${im.id}\n\n` +
       `Está disponível para visita?`,
   );
@@ -80,13 +106,17 @@ export function vistaDetalhe(id) {
             .map(
               (src, i) => `
             <div class="gallery__slide">
-              <img src="${esc(src)}" alt="${esc(im.titulo)} — foto ${i + 1}"
+              <img src="${esc(urlFoto(src))}" alt="${esc(im.titulo)} — foto ${i + 1}"
                    ${i ? 'loading="lazy"' : ""}>
             </div>`,
             )
             .join("")}
         </div>
-        ${f.length > 1 ? `<div class="gallery__counter"><span id="foto-actual">1</span>/${f.length}</div>` : ""}
+        ${
+          f.length > 1
+            ? `<div class="gallery__counter"><span id="foto-actual">1</span>/${f.length}</div>`
+            : ""
+        }
       </div>
 
       ${
@@ -97,7 +127,7 @@ export function vistaDetalhe(id) {
           .map(
             (src, i) => `
           <button data-ir="${i}" data-on="${i === 0}">
-            <img src="${esc(src)}" alt="Ir para a foto ${i + 1}">
+            <img src="${esc(urlFoto(src))}" alt="Ir para a foto ${i + 1}">
           </button>`,
           )
           .join("")}
@@ -108,7 +138,9 @@ export function vistaDetalhe(id) {
       <div class="detail-grid">
         <div>
           <div class="detail-badges">
-            <span class="badge badge--line">${im.transacao === "comprar" ? "À venda" : "Arrendar"}</span>
+            <span class="badge badge--line">${
+              im.tipoTransacao === "VENDA" ? "À venda" : "Arrendar"
+            }</span>
             <span class="badge badge--line">${esc(im.tipo || "Imóvel")}</span>
             ${im.verificado ? SELO : ""}
             <span class="detail-ref">Ref. #${esc(im.id)}</span>
@@ -116,11 +148,11 @@ export function vistaDetalhe(id) {
 
           <h1 class="detail-title">${esc(im.titulo)}</h1>
           <p class="detail-zone">
-            ${ico(ICONES.local)}
-            ${esc(im.zona)}${im.municipio ? ", " + esc(im.municipio) : ""}
+            ${ico(ICONES.local, 16)}
+            ${esc(im.zona)}${municipioNome ? ", " + esc(municipioNome) : ""}
           </p>
 
-          <p class="detail-price">${precoFormatado(im.preco, im.transacao)}</p>
+          <p class="detail-price">${precoFormatado(im.preco, im.tipoTransacao)}</p>
 
           <div class="detail-stats">
             ${[
@@ -140,7 +172,7 @@ export function vistaDetalhe(id) {
               .map(
                 ([d, v, l]) => `
                 <div class="stat">
-                  <span class="muted">${ico(d, "w-5 h-5")}</span>
+                  <span class="muted">${ico(d, 20)}</span>
                   <p class="stat__value">${esc(v)}</p>
                   <p class="stat__label">${l}</p>
                 </div>`,
@@ -193,8 +225,8 @@ export function vistaDetalhe(id) {
         </div>
 
         <aside class="contact-panel">
-          <p class="contact-panel__price">${precoFormatado(im.preco, im.transacao)}</p>
-          <p class="contact-panel__meta">${esc(im.contacto || "Proprietário")} · Ref. #${esc(im.id)}</p>
+          <p class="contact-panel__price">${precoFormatado(im.preco, im.tipoTransacao)}</p>
+          <p class="contact-panel__meta">Proprietário · Ref. #${esc(im.id)}</p>
 
           <a href="${wa}" target="_blank" rel="noopener"
              class="btn btn-primary btn-block" style="margin-top:var(--space-4)">
@@ -213,11 +245,11 @@ export function vistaDetalhe(id) {
     <div class="detail-cta">
       <div class="detail-cta__inner">
         <div class="detail-cta__price">
-          <strong>${precoFormatado(im.preco, im.transacao)}</strong>
+          <strong>${precoFormatado(im.preco, im.tipoTransacao)}</strong>
           <span>Ref. #${esc(im.id)} · ${esc(im.zona)}</span>
         </div>
         <a href="${wa}" target="_blank" rel="noopener" class="btn btn-primary">
-          ${iconeWA()} WhatsApp
+          ${iconeWA(18)} WhatsApp
         </a>
       </div>
     </div>`;
