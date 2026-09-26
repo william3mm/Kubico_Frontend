@@ -13,6 +13,7 @@ export const ROTAS_API = {
   verificar: "/api/auth/otp/verify",
   novaSenha: "/api/auth/password-recovery",
   enviarOtp: "/api/auth/otp/send",
+  gestaoImoveis: "/api/gestao/imoveis",
 
   imoveis: "/api/imoveis",
 

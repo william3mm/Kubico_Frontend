@@ -38,6 +38,19 @@ const iconeWA = (size = 20) => `
     <path d="M12.04 2C6.6 2 2.2 6.4 2.2 11.84c0 1.74.46 3.44 1.32 4.94L2 22l5.36-1.4a9.8 9.8 0 0 0 4.68 1.2h.01c5.43 0 9.84-4.4 9.84-9.84S17.47 2 12.04 2m5.72 13.9c-.24.68-1.4 1.3-1.93 1.35-.5.05-.96.23-2.7-.56-2.1-.95-3.42-3.14-3.53-3.28-.1-.15-.85-1.16-.85-2.22 0-1.05.55-1.57.75-1.79.2-.22.43-.27.57-.27h.41c.13 0 .32-.05.49.38.17.44.6 1.5.65 1.6.05.11.08.24.01.38-.07.15-.13.24-.26.38l-.2.23c-.13.13-.27.28-.12.53.15.25.66 1.1 1.42 1.78.97.87 1.5 1.02 1.74 1.14.18.1.33.08.46-.05.15-.15.53-.62.68-.83.14-.22.29-.18.48-.11.2.07 1.24.6 1.46.71.21.11.35.16.4.25.05.1.05.56-.19 1.23"/>
   </svg>`;
 
+/* Resolve a rota do botão "Voltar" conforme a origem */
+function rotaVoltar() {
+  const anterior = sessionStorage.getItem("kubiko_rota_anterior") || "";
+
+  // Vem da gestão → volta à lista de imóveis do painel
+  if (anterior.startsWith("#/gestao")) {
+    return { href: "#/gestao/imoveis", texto: "Voltar ao painel" };
+  }
+
+  // Fallback: pública
+  return { href: "#/imoveis", texto: "Voltar aos imóveis" };
+}
+
 export async function vistaDetalhe(id) {
   const app = $("#app");
 
@@ -78,6 +91,7 @@ export async function vistaDetalhe(id) {
   const f = fotos(im);
   const infra = Array.isArray(im.infraestruturas) ? im.infraestruturas : [];
   const municipioNome = im.municipio?.nome || im.municipio || "";
+  const voltar = rotaVoltar();
 
   // 3. Mensagem WhatsApp
   const msg = encodeURIComponent(
@@ -94,10 +108,10 @@ export async function vistaDetalhe(id) {
 
   app.innerHTML = `
     <article class="detail fade-in">
-      <a href="#/imoveis" class="detail-back">
+      <a href="${esc(voltar.href)}" class="detail-back">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
-        Voltar aos imóveis
+        ${esc(voltar.texto)}
       </a>
 
       <div class="gallery">

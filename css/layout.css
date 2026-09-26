@@ -245,3 +245,116 @@ body {
     display: none;
   }
 }
+
+/* =========================================================
+   HEADER — dropdown do utilizador
+   ========================================================= */
+.header-user {
+  position: relative;
+}
+
+.header-user__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+.header-user__btn:hover {
+  border-color: color-mix(in srgb, var(--brand) 50%, var(--line));
+}
+.header-user__btn svg {
+  opacity: 0.6;
+  transition: transform 0.15s ease;
+}
+.header-user__btn[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.header-user__name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 30rem) {
+  /* Em ecrãs muito pequenos, esconde o nome */
+  .header-user__name {
+    display: none;
+  }
+}
+
+.header-user__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  min-width: 13rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lift);
+  padding: 0.375rem;
+  z-index: 50;
+  animation: fi 0.15s ease-out both;
+}
+.header-user__menu[hidden] {
+  display: none;
+}
+
+.header-user__menu a,
+.header-user__menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.12s ease;
+}
+.header-user__menu a:hover,
+.header-user__menu button:hover {
+  background: var(--surface);
+}
+.header-user__menu button {
+  color: var(--danger-dark, #c0392b);
+  border-top: 1px solid var(--line);
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
+/* =========================================================
+   MODO GESTÃO — esconder elementos do site público
+   ========================================================= */
+body.rota-gestao .main-nav {
+  display: none !important;
+}
+
+body.rota-gestao .site-footer {
+  display: none;
+}
+
+body.rota-gestao .tabbar {
+  display: none !important;
+}
+
+body.rota-gestao .app-main {
+  padding-bottom: 0;
+}
