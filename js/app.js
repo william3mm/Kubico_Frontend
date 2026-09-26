@@ -9,16 +9,23 @@ import { vistaPublicar } from "./views/publicar.js";
 import { vistaEntrar } from "./views/entrar.js";
 import { vistaRegistar } from "./views/registar.js";
 import { vistaVerificar } from "./views/verificar.js";
+import { vistaGestao } from "./views/gestao.js";
 
-/* ─── Helpers ─── */
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════ */
 const areaDoUtilizador = (u) =>
   u?.tipo === "PROPRIETARIO" || u?.tipo === "ADMIN" ? "#/gestao" : "#/";
+
+const eProprietario = (u) => u?.tipo === "PROPRIETARIO" || u?.tipo === "ADMIN";
 
 /* Marca o ano no footer */
 const ano = document.getElementById("ano");
 if (ano) ano.textContent = new Date().getFullYear();
 
-/* ─── Router ─── */
+/* ═══════════════════════════════════════════════════════════
+   ROUTER
+   ═══════════════════════════════════════════════════════════ */
 function router() {
   const h = location.hash.replace(/^#/, "") || "/";
   const [rota, qs] = h.split("?");
@@ -26,12 +33,22 @@ function router() {
   const partes = rota.split("/").filter(Boolean);
   const u = sessao.user;
 
+  /* Marca o body com a rota actual — usado pelo CSS para esconder
+     nav/footer/tabbar na área de gestão */
+  document.body.classList.toggle("rota-gestao", partes[0] === "gestao");
+
+  /* Guarda a última rota (excepto se for um imóvel individual)
+     para o botão "Voltar" da vista de detalhe */
+  if (partes[0] !== "imovel") {
+    sessionStorage.setItem("kubiko_rota_anterior", "#" + (rota || "/"));
+  }
+
   window.scrollTo({ top: 0, behavior: "auto" });
 
   desenharHeader();
   desenharTabbar(rota);
 
-  /* ─── Rotas que redireccionam se já autenticado ─── */
+  /* ─── Rotas de auth (redireccionam se já autenticado) ─── */
   if (partes[0] === "entrar" || partes[0] === "registar") {
     if (u) {
       location.hash = areaDoUtilizador(u);
@@ -46,7 +63,7 @@ function router() {
   if (partes[0] === "imovel" && partes[1])
     return vistaDetalhe(decodeURIComponent(partes[1]));
 
-  /* ─── Rotas que exigem autenticação ─── */
+  /* ─── Publicar (só proprietário) ─── */
   if (partes[0] === "publicar") {
     if (!u) {
       location.hash = "#/registar";
@@ -60,14 +77,22 @@ function router() {
     return vistaPublicar();
   }
 
+  /* ─── Gestão (só proprietário) ─── */
   if (partes[0] === "gestao") {
     if (!u) {
       location.hash = "#/entrar";
       return;
     }
-    return placeholderEmBreve("gestão");
+    if (!eProprietario(u)) {
+      toast("Esta área é só para proprietários.");
+      location.hash = "#/";
+      return;
+    }
+    const aba = partes[1] || "imoveis";
+    return vistaGestao(aba);
   }
 
+  /* ─── Perfil (inquilino) ─── */
   if (partes[0] === "perfil") {
     if (!u) {
       location.hash = "#/entrar";
@@ -83,7 +108,9 @@ function router() {
   return vistaInicio();
 }
 
-/* ─── Placeholder genérico ─── */
+/* ═══════════════════════════════════════════════════════════
+   PLACEHOLDER
+   ═══════════════════════════════════════════════════════════ */
 function placeholderEmBreve(nome) {
   $("#app").innerHTML = `
     <div class="auth-wrap">
@@ -99,6 +126,8 @@ function placeholderEmBreve(nome) {
     </div>`;
 }
 
-/* ─── Arranque ─── */
+/* ═══════════════════════════════════════════════════════════
+   ARRANQUE
+   ═══════════════════════════════════════════════════════════ */
 window.addEventListener("hashchange", router);
 router();

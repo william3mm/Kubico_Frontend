@@ -339,3 +339,22 @@ body {
   padding-top: 0.75rem;
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
+
+/* =========================================================
+   MODO GESTÃO — esconder elementos do site público
+   ========================================================= */
+body.rota-gestao .main-nav {
+  display: none !important;
+}
+
+body.rota-gestao .site-footer {
+  display: none;
+}
+
+body.rota-gestao .tabbar {
+  display: none !important;
+}
+
+body.rota-gestao .app-main {
+  padding-bottom: 0;
+}

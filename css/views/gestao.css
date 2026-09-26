@@ -1,0 +1,309 @@
+/* =========================================================
+   LAYOUT DA GESTÃO
+   ========================================================= */
+.gestao {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: calc(100vh - var(--header-h));
+  margin-inline: calc(-1 * var(--space-4)); /* alinha com o app-main */
+}
+
+@media (min-width: 64rem) {
+  .gestao {
+    grid-template-columns: 16rem 1fr;
+    margin-inline: 0;
+  }
+}
+
+.gestao__content {
+  min-width: 0;
+  padding-inline: var(--space-4);
+  padding-block: var(--space-4);
+}
+
+@media (min-width: 64rem) {
+  .gestao__content {
+    padding-inline: var(--space-6);
+    padding-block: var(--space-6);
+  }
+}
+
+.gestao__view {
+  margin-top: var(--space-5);
+}
+
+/* =========================================================
+   TOPBAR (mobile) / TÍTULO
+   ========================================================= */
+.gestao-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--line);
+}
+
+.gestao-topbar__menu,
+.gestao-topbar__novo {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.gestao-topbar__novo {
+  background: var(--brand);
+  color: #fff;
+}
+
+@media (min-width: 64rem) {
+  /* Em desktop, esconde o hamburger e o botão novo (sidebar já tem) */
+  .gestao-topbar__menu {
+    display: none;
+  }
+}
+
+.gestao-topbar__title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+@media (min-width: 64rem) {
+  .gestao-topbar {
+    justify-content: flex-start;
+  }
+  .gestao-topbar__title {
+    text-align: left;
+    font-size: 1.5rem;
+  }
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+.sidebar {
+  background: var(--card);
+  border-right: 1px solid var(--line);
+  padding: var(--space-4);
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .sidebar {
+    display: block;
+    position: sticky;
+    top: var(--header-h);
+    height: calc(100vh - var(--header-h));
+    overflow-y: auto;
+  }
+}
+
+/* Mobile: sidebar como off-canvas */
+@media (max-width: 63.99rem) {
+  .sidebar {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 60;
+    width: 17rem;
+    max-width: 80vw;
+    background: var(--card);
+    border-right: 1px solid var(--line);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    padding-top: calc(env(safe-area-inset-top, 0px) + var(--space-5));
+    overflow-y: auto;
+  }
+  .sidebar.is-open {
+    transform: translateX(0);
+  }
+}
+
+.sidebar__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: var(--overlay);
+  animation: fi 0.2s ease-out;
+}
+.sidebar__backdrop[hidden] {
+  display: none;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.sidebar__link:hover {
+  background: var(--surface);
+}
+
+.sidebar__link.is-on {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.sidebar__link svg {
+  color: inherit;
+  opacity: 0.75;
+}
+.sidebar__link.is-on svg {
+  opacity: 1;
+}
+
+/* =========================================================
+   LISTA DE IMÓVEIS (gestão)
+   ========================================================= */
+.gestao-imoveis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.gestao-imovel {
+  display: flex;
+  gap: var(--space-4);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  align-items: stretch;
+}
+
+@media (max-width: 30rem) {
+  .gestao-imovel {
+    flex-direction: column;
+  }
+}
+
+.gestao-imovel__media {
+  width: 7rem;
+  height: 7rem;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.gestao-imovel__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 30rem) {
+  .gestao-imovel__media {
+    width: 100%;
+    height: 10rem;
+  }
+}
+
+.gestao-imovel__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.gestao-imovel__top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.gestao-imovel__preco {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.gestao-imovel__titulo {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.gestao-imovel__zona {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.gestao-imovel__meta {
+  display: flex;
+  gap: 0.875rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.gestao-imovel__accoes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: var(--space-3);
+}
+
+.gestao-imovel__accoes .btn {
+  min-height: 40px;
+  padding-inline: 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+}
+
+.btn--danger {
+  color: var(--danger-dark, #c0392b);
+  border-color: color-mix(
+    in srgb,
+    var(--danger-dark, #c0392b) 30%,
+    var(--line)
+  );
+}
+.btn--danger:hover {
+  background: var(--danger-soft, #fdecec);
+  border-color: var(--danger-dark, #c0392b);
+}
+
+/* =========================================================
+   PERFIL (dados)
+   ========================================================= */
+.gestao-perfil {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--space-5);
+}
+
+.gestao-perfil__nome {
+  font-size: 1.125rem;
+  font-weight: 800;
+  margin: 0;
+}

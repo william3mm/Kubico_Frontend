@@ -1,6 +1,9 @@
 import { CONFIG, ROTAS_API } from "./config.js";
 import { sessao } from "./state.js";
 
+/* ═══════════════════════════════════════════════════════════
+   FETCH GENÉRICO
+   ═══════════════════════════════════════════════════════════ */
 export async function fetchApi(
   rota,
   { metodo = "GET", corpo = null, formData = null } = {},
@@ -28,7 +31,11 @@ export async function fetchApi(
   return dados;
 }
 
-/* Listar imóveis com filtros */
+/* ═══════════════════════════════════════════════════════════
+   HELPERS DE ROTAS
+   ═══════════════════════════════════════════════════════════ */
+
+/** Listar imóveis com filtros (público) */
 export async function listarImoveis(filtros = {}) {
   const params = new URLSearchParams();
   for (const [chave, valor] of Object.entries(filtros)) {
@@ -38,9 +45,11 @@ export async function listarImoveis(filtros = {}) {
   return fetchApi(ROTAS_API.imoveis + (query ? "?" + query : ""));
 }
 
-/* Atalhos por endpoint */
+/* ═══════════════════════════════════════════════════════════
+   ATALHOS POR ENDPOINT
+   ═══════════════════════════════════════════════════════════ */
 export const api = {
-  // ─── Autenticação ───
+  /* ─── Autenticação ─── */
   entrar: (corpo) => fetchApi(ROTAS_API.entrar, { metodo: "POST", corpo }),
   registar: (corpo) => fetchApi(ROTAS_API.registar, { metodo: "POST", corpo }),
   recuperar: (destino) =>
@@ -56,7 +65,7 @@ export const api = {
       corpo: { destino, codigo, senha },
     }),
 
-  // ─── Imóveis ───
+  /* ─── Imóveis (público + dono) ─── */
   imoveis: () => fetchApi(ROTAS_API.imoveis),
 
   buscarImovel: async (id) => {
@@ -68,6 +77,22 @@ export const api = {
   publicarConteudo: (formData) =>
     fetchApi(ROTAS_API.imoveis, { metodo: "POST", formData }),
 
-  // ─── Localização ───
+  editarImovel: (id, corpo) =>
+    fetchApi(`${ROTAS_API.imoveis}/${encodeURIComponent(id)}`, {
+      metodo: "PUT",
+      corpo,
+    }),
+
+  apagarImovel: (id) =>
+    fetchApi(`${ROTAS_API.imoveis}/${encodeURIComponent(id)}`, {
+      metodo: "DELETE",
+    }),
+
+  /* ─── Gestão (dono) ─── */
+  meusImoveis: () => fetchApi(ROTAS_API.gestaoImoveis),
+
+  perfil: (corpo) => fetchApi(ROTAS_API.perfil, { metodo: "PUT", corpo }),
+
+  /* ─── Localização ─── */
   municipios: () => fetchApi(ROTAS_API.municipios),
 };
