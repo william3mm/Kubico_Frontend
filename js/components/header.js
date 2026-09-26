@@ -1,5 +1,5 @@
 import { sessao } from "../state.js";
-import { iniciais } from "../utils.js";
+import { iniciais, toast } from "../utils.js";
 
 export function desenharHeader() {
   const box = document.getElementById("header-conta");
@@ -14,14 +14,55 @@ export function desenharHeader() {
     return;
   }
 
-  const href = u.perfil === "proprietario" ? "#/painel" : "#/perfil";
+  // URL da área pessoal conforme o tipo
+  const href =
+    u.tipo === "PROPRIETARIO" || u.tipo === "ADMIN" ? "#/gestao" : "#/perfil";
+
   box.innerHTML = `
-    <a href="${href}" class="row-card" style="padding:.25rem .75rem .25rem .25rem;border-radius:var(--radius-full);align-items:center">
-      <span class="avatar avatar--sm">${iniciais(u.nome)}</span>
-      <span style="font-size:.875rem;font-weight:600;max-width:8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-        ${(u.nome || "").split(" ")[0]}
-      </span>
-    </a>`;
+    <div class="header-user" id="header-user">
+      <button type="button" class="header-user__btn" aria-haspopup="true" aria-expanded="false">
+        <span class="avatar avatar--sm">${iniciais(u.nome)}</span>
+        <span class="header-user__name">${(u.nome || "").split(" ")[0]}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </button>
+
+      <div class="header-user__menu" hidden>
+        <a href="${href}">Meu perfil</a>
+        <button type="button" id="sair-conta">Terminar sessão</button>
+      </div>
+    </div>`;
+
+  // Toggle do menu
+  const wrap = document.getElementById("header-user");
+  const btn = wrap.querySelector(".header-user__btn");
+  const menu = wrap.querySelector(".header-user__menu");
+
+  btn.onclick = (ev) => {
+    ev.stopPropagation();
+    const aberto = !menu.hidden;
+    menu.hidden = aberto;
+    btn.setAttribute("aria-expanded", String(!aberto));
+  };
+
+  // Fechar ao clicar fora
+  document.addEventListener("click", function fechar(ev) {
+    if (!wrap.contains(ev.target)) {
+      menu.hidden = true;
+      btn.setAttribute("aria-expanded", "false");
+      document.removeEventListener("click", fechar);
+    }
+  });
+
+  // Terminar sessão
+  wrap.querySelector("#sair-conta").onclick = () => {
+    sessao.sair();
+    toast("Sessão terminada");
+    location.hash = "#/";
+    desenharHeader();
+  };
 }
 
 export function desenharTabbar(rota) {
@@ -38,8 +79,8 @@ export function desenharTabbar(rota) {
   nav.hidden = false;
 
   const conta =
-    u.perfil === "proprietario"
-      ? ["#/painel", "Painel"]
+    u.tipo === "PROPRIETARIO" || u.tipo === "ADMIN"
+      ? ["#/gestao", "Gestão"]
       : ["#/perfil", "Perfil"];
 
   const itens = [

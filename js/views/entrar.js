@@ -10,7 +10,15 @@ import {
   campoSenha,
 } from "../utils.js";
 
-export function vistaEntrar(onSucesso) {
+function encaminharPorTipo(u) {
+  if (u?.tipo === "PROPRIETARIO" || u?.tipo === "ADMIN") {
+    location.hash = "#/gestao";
+  } else {
+    location.hash = "#/";
+  }
+}
+
+export function vistaEntrar() {
   const app = $("#app");
 
   app.innerHTML = `
@@ -18,14 +26,14 @@ export function vistaEntrar(onSucesso) {
       <div class="auth-card">
         <h1 class="auth-title">Entrar na conta</h1>
         <p class="auth-subtitle">
-          Usa o número de telefone ou o email com que criaste a conta.
+          Usa o email com que criaste a conta.
         </p>
 
         <form id="f-entrar" class="auth-body" novalidate>
           <label class="field">
-            <span class="field__label">Telefone ou email</span>
-            <input name="identificador" required autocomplete="username"
-                   placeholder="923 000 000" class="input">
+            <span class="field__label">Email</span>
+            <input name="email" type="email" required autocomplete="email"
+                   placeholder="ana@exemplo.ao" class="input">
           </label>
 
           <div>
@@ -58,30 +66,49 @@ export function vistaEntrar(onSucesso) {
   $("#f-entrar").addEventListener("submit", async (e) => {
     e.preventDefault();
     const d = new FormData(e.target);
-    const identificador = String(d.get("identificador") || "").trim();
+    const email = String(d.get("email") || "")
+      .trim()
+      .toLowerCase();
     const senha = String(d.get("senha") || "");
 
-    if (!identificador || !senha)
-      return erroCaixa("erro-entrar", "Escreve o telefone ou email e a senha.");
+    if (!email || !senha)
+      return erroCaixa("erro-entrar", "Escreve o email e a senha.");
 
     const btn = e.target.querySelector("button");
     const solta = ocupado(btn, "A entrar…");
 
     try {
-      const r = await api.entrar({ identificador, senha });
-      sessao.guardar(r.token, r.utilizador || r.user);
+      const r = await api.entrar({ email, senha });
+
+      // O backend devolve { usuario }, o token vem no cookie HttpOnly
+      const u = r?.usuario || r?.utilizador || r?.user;
+
+      if (u) {
+        sessao.guardar("cookie-auth", u);
+      }
+
       toast("Bem-vindo");
-      onSucesso?.();
+      encaminharPorTipo(u);
     } catch (err) {
       solta();
-      if (err.status === 401)
+
+      if (err.status === 401) {
         return erroCaixa(
           "erro-entrar",
-          "Telefone ou senha errados. Tenta outra vez.",
+          "Email ou senha errados. Tenta outra vez.",
         );
+      }
+
+      if (err.status === 403) {
+        return erroCaixa(
+          "erro-entrar",
+          "A tua conta ainda não está confirmada. Verifica o teu email.",
+        );
+      }
+
       erroCaixa(
         "erro-entrar",
-        "Não conseguimos ligar ao servidor. Tenta outra vez.",
+        err.dados?.erro || "Não conseguimos entrar. Tenta outra vez.",
       );
     }
   });
