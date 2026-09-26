@@ -207,3 +207,64 @@
 .check-row .muted {
   color: var(--muted);
 }
+
+/* =========================================================
+   CARTÕES DE PERFIL — escolha no registo
+   ========================================================= */
+.option-grid.cols-1 {
+  grid-template-columns: 1fr;
+}
+
+.perfil-opt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.perfil-opt:hover {
+  border-color: color-mix(in srgb, var(--brand) 50%, var(--line));
+}
+
+.perfil-opt.is-on {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.perfil-opt__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--card);
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.perfil-opt__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.perfil-opt__title {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.perfil-opt__desc {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.3;
+}
