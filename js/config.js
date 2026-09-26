@@ -7,14 +7,14 @@ export const CONFIG = {
 
 export const ROTAS_API = {
   // ─── Auth ───
-  registar: "/api/auth/registar",
+  registar: "/api/auth/register",
   entrar: "/api/auth/login",
-  recuperar: "/api/auth/recuperar",
-  verificar: "/api/auth/verificar-codigo",
-  novaSenha: "/api/auth/nova-senha",
+  recuperar: "/api/auth/password-recovery",
+  verificar: "/api/auth/otp/verify",
+  novaSenha: "/api/auth/password-recovery",
+  enviarOtp: "/api/auth/otp/send",
 
-  // ─── Imóveis (tudo neste prefixo) ───
-  imoveis: "/api/imoveis", // GET lista, GET :id, POST, PUT :id, DELETE :id
+  imoveis: "/api/imoveis",
 
   // ─── Localização ───
   municipios: "/api/municipios",

@@ -6,6 +6,7 @@ import { vistaDetalhe } from "./views/detalhe.js";
 import { vistaPublicar } from "./views/publicar.js";
 import { vistaEntrar } from "./views/entrar.js";
 import { vistaRegistar } from "./views/registar.js";
+import { vistaVerificar } from "./views/verificar.js";
 
 const ano = document.getElementById("ano");
 if (ano) ano.textContent = new Date().getFullYear();
@@ -23,6 +24,7 @@ function router() {
 
   if (partes[0] === "entrar") return vistaEntrar();
   if (partes[0] === "registar") return vistaRegistar();
+  if (partes[0] === "verificar") return vistaVerificar(params);
   if (partes[0] === "imoveis") return vistaListagem(params);
   if (partes[0] === "imovel" && partes[1])
     return vistaDetalhe(decodeURIComponent(partes[1]));
