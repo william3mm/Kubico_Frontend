@@ -33,12 +33,13 @@ function router() {
   const partes = rota.split("/").filter(Boolean);
   const u = sessao.user;
 
-  /* Marca o body com a rota actual — usado pelo CSS para esconder
-     nav/footer/tabbar na área de gestão */
-  document.body.classList.toggle("rota-gestao", partes[0] === "gestao");
+  /* ─── Modo gestão ───
+     /gestao/* ou /publicar?editar=*
+     O CSS esconde nav/footer/tabbar quando o body tem esta classe */
+  const emGestao = partes[0] === "gestao" || partes[0] === "publicar";
+  document.body.classList.toggle("rota-gestao", emGestao);
 
-  /* Guarda a última rota (excepto se for um imóvel individual)
-     para o botão "Voltar" da vista de detalhe */
+  /* ─── Guarda a última rota (excepto imóvel individual) ─── */
   if (partes[0] !== "imovel") {
     sessionStorage.setItem("kubiko_rota_anterior", "#" + (rota || "/"));
   }
@@ -48,7 +49,7 @@ function router() {
   desenharHeader();
   desenharTabbar(rota);
 
-  /* ─── Rotas de auth (redireccionam se já autenticado) ─── */
+  /* ─── Auth ─── */
   if (partes[0] === "entrar" || partes[0] === "registar") {
     if (u) {
       location.hash = areaDoUtilizador(u);
@@ -57,7 +58,7 @@ function router() {
     return partes[0] === "entrar" ? vistaEntrar() : vistaRegistar();
   }
 
-  /* ─── Rotas públicas ─── */
+  /* ─── Públicas ─── */
   if (partes[0] === "verificar") return vistaVerificar(params);
   if (partes[0] === "imoveis") return vistaListagem(params);
   if (partes[0] === "imovel" && partes[1])
@@ -74,7 +75,7 @@ function router() {
       location.hash = "#/";
       return;
     }
-    return vistaPublicar();
+    return vistaPublicar(params);
   }
 
   /* ─── Gestão (só proprietário) ─── */

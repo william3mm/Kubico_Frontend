@@ -86,7 +86,6 @@
 .pw-wrap .input {
   padding-right: 3rem;
 }
-
 .pw-toggle {
   position: absolute;
   right: 0.25rem;
@@ -227,6 +226,9 @@
   display: grid;
   gap: 0.5rem;
 }
+.option-grid.cols-1 {
+  grid-template-columns: 1fr;
+}
 .option-grid.cols-2 {
   grid-template-columns: repeat(2, 1fr);
 }
@@ -289,4 +291,18 @@
   border-color: var(--brand);
   background: var(--brand-soft);
   color: var(--brand-dark);
+}
+
+/* =========================================================
+   PÁGINA DE FORMULÁRIO (publicar, editar)
+   ========================================================= */
+.form-page {
+  max-width: 36rem;
+  margin-inline: auto;
+  padding-top: var(--space-5);
+}
+
+/* Em modo edição, o "Voltar ao painel" precisa de espaço */
+.form-page .detail-back {
+  margin-bottom: var(--space-4);
 }
