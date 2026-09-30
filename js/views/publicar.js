@@ -3,6 +3,9 @@ import { api } from "../api.js";
 import { CONFIG } from "../config.js";
 import { TIPOS, LABELS_TIPO, INFRA_OPCOES } from "../data/imovel_opcoes.js";
 
+/* Províncias onde aceitamos publicações (por NOME — robusto a siglas diferentes) */
+const PROVINCIAS_ACTIVAS = ["Luanda", "Bengo"];
+
 export async function vistaPublicar(params = new URLSearchParams()) {
   const app = $("#app");
   const idEditar = params.get("editar");
@@ -28,16 +31,64 @@ export async function vistaPublicar(params = new URLSearchParams()) {
     }
   }
 
-  /* ─── 2. Valores iniciais ─── */
+  /* ─── 2. Carregar municípios ─── */
+  let todosMunicipios = [];
+  try {
+    const r = await api.municipios();
+    todosMunicipios = r.municipios || r.data || [];
+  } catch (err) {
+    console.error("Erro ao carregar municípios:", err);
+  }
+
+  /* ─── 3. Agrupar municípios por NOME de província ─── */
+  const provincias = new Map(); // nome → { id, nome, sigla, municipios[] }
+
+  for (const m of todosMunicipios) {
+    const p = m.provincia;
+    if (!p || !p.nome) continue;
+
+    if (!provincias.has(p.nome)) {
+      provincias.set(p.nome, {
+        id: p.id,
+        nome: p.nome,
+        sigla: p.sigla || "",
+        municipios: [],
+      });
+    }
+    provincias.get(p.nome).municipios.push(m);
+  }
+
+  /* ─── 4. Filtrar só as províncias activas (por nome) ─── */
+  const listaProvincias = [...provincias.values()]
+    .filter((p) => PROVINCIAS_ACTIVAS.includes(p.nome))
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
+
+  /* ─── 5. Descobrir província do imóvel (se edição) ─── */
+  let provinciaInicial = "";
+
+  if (modoEdicao && im?.municipioId) {
+    for (const p of listaProvincias) {
+      if (p.municipios.some((m) => Number(m.id) === Number(im.municipioId))) {
+        provinciaInicial = p.nome;
+        break;
+      }
+    }
+  }
+
+  if (!provinciaInicial && listaProvincias.length) {
+    provinciaInicial = listaProvincias[0].nome;
+  }
+
+  /* ─── 6. Valores iniciais ─── */
   const v = {
     titulo: im?.titulo || "",
     tipo: im?.tipo || "APARTAMENTO",
     tipoTransacao: im?.tipoTransacao || "ARRENDAMENTO",
     zona: im?.zona || "",
     municipioId: im?.municipioId || "",
-    preco: im?.preco || "",
-    quartos: im?.quartos ?? 2,
-    banheiros: im?.banheiros ?? 1,
+    preco: im?.preco ?? "",
+    quartos: im?.quartos ?? "",
+    banheiros: im?.banheiros ?? "",
     area: im?.area ?? "",
     descricao: im?.descricao || "",
     infraestruturas: Array.isArray(im?.infraestruturas)
@@ -45,25 +96,17 @@ export async function vistaPublicar(params = new URLSearchParams()) {
       : [],
   };
 
-  /* ─── 3. Carregar municípios ─── */
-  let municipios = [];
-  try {
-    const r = await api.municipios();
-    municipios = r.municipios || r.data || [];
-  } catch {}
-
-  /* ─── 4. Render ─── */
+  /* ─── 7. Render ─── */
   app.innerHTML = `
     <div class="form-page fade-in">
 
-    ${`
-  <a href="#/gestao/imoveis" class="detail-back">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <path d="M15 6l-6 6 6 6"/>
-    </svg>
-    ${modoEdicao ? "Voltar ao painel" : "Voltar ao painel"}
-  </a>`}
+      <a href="#/gestao/imoveis" class="detail-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M15 6l-6 6 6 6"/>
+        </svg>
+        Voltar ao painel
+      </a>
 
       <h1 class="title-lg">${modoEdicao ? "Editar imóvel" : "Publicar imóvel"}</h1>
       <p class="muted text-sm" style="margin-top:.375rem;line-height:1.6">
@@ -76,7 +119,6 @@ export async function vistaPublicar(params = new URLSearchParams()) {
 
       <form id="f-publicar" class="form" style="margin-top:var(--space-6)" novalidate>
 
-        <!-- ─── O IMÓVEL ─── -->
         <fieldset class="fieldset">
           <legend>O imóvel</legend>
 
@@ -114,23 +156,29 @@ export async function vistaPublicar(params = new URLSearchParams()) {
             </div>
           </div>
 
+          <label class="field" style="margin-top:var(--space-4)">
+            <span class="field__label">Zona / bairro</span>
+            <input name="zona" required value="${esc(v.zona)}"
+                   placeholder="Talatona" class="input">
+          </label>
+
           <div class="grid-2" style="margin-top:var(--space-4)">
             <label class="field">
-              <span class="field__label">Zona / bairro</span>
-              <input name="zona" required value="${esc(v.zona)}"
-                     placeholder="Talatona" class="input">
+              <span class="field__label">Província</span>
+              <select name="provinciaNome" class="select" required id="select-provincia">
+                ${listaProvincias
+                  .map(
+                    (p) =>
+                      `<option value="${esc(p.nome)}" ${p.nome === provinciaInicial ? "selected" : ""}>${esc(p.nome)}</option>`,
+                  )
+                  .join("")}
+              </select>
             </label>
 
             <label class="field">
               <span class="field__label">Município</span>
-              <select name="municipioId" class="select" required>
+              <select name="municipio_id" class="select" required id="select-municipio">
                 <option value="">Escolhe o município</option>
-                ${municipios
-                  .map(
-                    (m) =>
-                      `<option value="${m.id}" ${Number(v.municipioId) === Number(m.id) ? "selected" : ""}>${esc(m.nome)}${m.provincia?.nome ? " — " + esc(m.provincia.nome) : ""}</option>`,
-                  )
-                  .join("")}
               </select>
             </label>
           </div>
@@ -151,12 +199,14 @@ export async function vistaPublicar(params = new URLSearchParams()) {
             <label class="field">
               <span class="field__label">Quartos</span>
               <input name="quartos" type="number" inputmode="numeric" min="0" max="20"
-                     value="${esc(v.quartos)}" class="input" style="text-align:center;font-weight:700">
+                     value="${esc(v.quartos)}" placeholder="2"
+                     class="input" style="text-align:center;font-weight:700">
             </label>
             <label class="field">
               <span class="field__label">Banhos</span>
               <input name="banheiros" type="number" inputmode="numeric" min="0" max="20"
-                     value="${esc(v.banheiros)}" class="input" style="text-align:center;font-weight:700">
+                     value="${esc(v.banheiros)}" placeholder="1"
+                     class="input" style="text-align:center;font-weight:700">
             </label>
             <label class="field">
               <span class="field__label">Área m²</span>
@@ -242,6 +292,31 @@ export async function vistaPublicar(params = new URLSearchParams()) {
 
   const form = $("#f-publicar");
   const nota = $("#nota-preco");
+  const selectProvincia = $("#select-provincia");
+  const selectMunicipio = $("#select-municipio");
+
+  /* ─── Preencher municípios conforme a província escolhida ─── */
+  function preencherMunicipios(nomeProvincia, valorSelecionado = "") {
+    const p = provincias.get(nomeProvincia);
+    const lista = p?.municipios || [];
+
+    selectMunicipio.innerHTML = `
+      <option value="">Escolhe o município</option>
+      ${lista
+        .map(
+          (m) =>
+            `<option value="${m.id}" ${Number(valorSelecionado) === Number(m.id) ? "selected" : ""}>${esc(m.nome)}</option>`,
+        )
+        .join("")}`;
+  }
+
+  /* ─── Preencher logo no arranque ─── */
+  preencherMunicipios(provinciaInicial, v.municipioId);
+
+  /* ─── Ao mudar de província, recarregar municípios ─── */
+  selectProvincia.addEventListener("change", () => {
+    preencherMunicipios(selectProvincia.value);
+  });
 
   /* ─── Alternar visual dos radios de transacção ─── */
   $$('input[name="tipoTransacao"]', form).forEach((r) =>
@@ -260,9 +335,10 @@ export async function vistaPublicar(params = new URLSearchParams()) {
     e.preventDefault();
     const d = new FormData(form);
 
-    const faltam = ["titulo", "zona", "municipioId", "preco"].filter(
+    const faltam = ["titulo", "zona", "municipio_id", "preco"].filter(
       (k) => !String(d.get(k) || "").trim(),
     );
+
     if (faltam.length) {
       erroCaixa(
         "erro-publicar",
@@ -272,16 +348,22 @@ export async function vistaPublicar(params = new URLSearchParams()) {
       return;
     }
 
+    /* Campos opcionais: "" se vazio, número se preenchido */
+    const numOuVazio = (k) => {
+      const raw = String(d.get(k) ?? "").trim();
+      return raw === "" ? "" : Number(raw);
+    };
+
     const payload = {
       titulo: d.get("titulo").trim(),
       tipo: d.get("tipo"),
       tipoTransacao: d.get("tipoTransacao"),
       zona: d.get("zona").trim(),
-      municipioId: Number(d.get("municipioId")),
+      municipioId: Number(d.get("municipio_id")),
       preco: Number(d.get("preco")),
-      quartos: Number(d.get("quartos") || 0),
-      banheiros: Number(d.get("banheiros") || 0),
-      area: Number(d.get("area") || 0),
+      quartos: numOuVazio("quartos"),
+      banheiros: numOuVazio("banheiros"),
+      area: numOuVazio("area"),
       descricao: (d.get("descricao") || "").trim(),
       infraestruturas: d.getAll("infraestruturas"),
     };
@@ -297,10 +379,31 @@ export async function vistaPublicar(params = new URLSearchParams()) {
       } else {
         const fich = form.querySelector('[name="ficheiros"]')?.files || [];
         const fd = new FormData();
-        Object.entries(payload).forEach(([k, val]) =>
-          fd.append(k, Array.isArray(val) ? JSON.stringify(val) : val),
+
+        const campos = {
+          titulo: payload.titulo,
+          tipo: payload.tipo,
+          tipoTransacao: payload.tipoTransacao,
+          zona: payload.zona,
+          municipio_id: payload.municipioId,
+          preco: payload.preco,
+          quartos: payload.quartos,
+          banheiros: payload.banheiros,
+          area: payload.area,
+          descricao: payload.descricao,
+          telefone: d.get("telefone") || "",
+        };
+
+        for (const [k, val] of Object.entries(campos)) {
+          if (val !== null && val !== undefined) {
+            fd.append(k, String(val));
+          }
+        }
+
+        payload.infraestruturas.forEach((item) =>
+          fd.append("infraestruturas", item),
         );
-        fd.append("telefone", d.get("telefone") || "");
+
         [...fich].forEach((f) => fd.append("fotos", f));
 
         await api.publicarConteudo(fd);
