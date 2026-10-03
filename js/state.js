@@ -1,14 +1,6 @@
-const CHAVE_TOKEN = "kubiko_token";
 const CHAVE_USER = "kubiko_user";
 
 export const sessao = {
-  get token() {
-    try {
-      return sessionStorage.getItem(CHAVE_TOKEN);
-    } catch {
-      return null;
-    }
-  },
   get user() {
     try {
       return JSON.parse(sessionStorage.getItem(CHAVE_USER) || "null");
@@ -16,21 +8,27 @@ export const sessao = {
       return null;
     }
   },
-  guardar(token, user) {
+
+  get autenticado() {
+    return !!this.user;
+  },
+
+  guardar(user) {
     try {
-      sessionStorage.setItem(CHAVE_TOKEN, token || "");
       sessionStorage.setItem(CHAVE_USER, JSON.stringify(user || {}));
     } catch {}
   },
+
   actualizar(patch) {
     const u = { ...(this.user || {}), ...patch };
-    this.guardar(this.token, u);
+    this.guardar(u);
     return u;
   },
+
   sair() {
     try {
-      sessionStorage.removeItem(CHAVE_TOKEN);
       sessionStorage.removeItem(CHAVE_USER);
+      sessionStorage.removeItem("kubiko_token");
     } catch {}
   },
 };

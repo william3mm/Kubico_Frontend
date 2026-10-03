@@ -10,22 +10,17 @@ import { vistaEntrar } from "./views/entrar.js";
 import { vistaRegistar } from "./views/registar.js";
 import { vistaVerificar } from "./views/verificar.js";
 import { vistaGestao } from "./views/gestao.js";
+import { vistaRecuperar } from "./views/recuperar.js";
+import { vistaPerfil } from "./views/perfil.js";
 
-/* ═══════════════════════════════════════════════════════════
-   HELPERS
-   ═══════════════════════════════════════════════════════════ */
 const areaDoUtilizador = (u) =>
   u?.tipo === "PROPRIETARIO" || u?.tipo === "ADMIN" ? "#/gestao" : "#/";
 
 const eProprietario = (u) => u?.tipo === "PROPRIETARIO" || u?.tipo === "ADMIN";
 
-/* Marca o ano no footer */
 const ano = document.getElementById("ano");
 if (ano) ano.textContent = new Date().getFullYear();
 
-/* ═══════════════════════════════════════════════════════════
-   ROUTER
-   ═══════════════════════════════════════════════════════════ */
 function router() {
   const h = location.hash.replace(/^#/, "") || "/";
   const [rota, qs] = h.split("?");
@@ -33,10 +28,7 @@ function router() {
   const partes = rota.split("/").filter(Boolean);
   const u = sessao.user;
 
-  /* ─── Modo gestão ───
-     /gestao/*, /publicar?editar=*
-     ou /imovel/:id quando vens da gestão
-     O CSS esconde nav/footer/tabbar quando o body tem esta classe */
+  /* ─── Modo gestão ─── */
   const rotaAnterior = sessionStorage.getItem("kubiko_rota_anterior") || "";
   const vemDaGestao = rotaAnterior.startsWith("#/gestao");
 
@@ -47,7 +39,6 @@ function router() {
 
   document.body.classList.toggle("rota-gestao", emGestao);
 
-  /* ─── Guarda a última rota (excepto imóvel individual) ─── */
   if (partes[0] !== "imovel") {
     sessionStorage.setItem("kubiko_rota_anterior", "#" + (rota || "/"));
   }
@@ -79,8 +70,11 @@ function router() {
       return;
     }
     if (u.tipo === "INQUILINO_COMPRADOR") {
-      toast("Só contas de proprietário podem publicar imóveis.");
-      location.hash = "#/";
+      toast("Cria uma conta como proprietário para poder publicar imóveis.");
+
+      setTimeout(() => {
+        location.hash = "#/";
+      }, 1200);
       return;
     }
     return vistaPublicar(params);
@@ -101,24 +95,22 @@ function router() {
     return vistaGestao(aba);
   }
 
-  /* ─── Perfil (inquilino) ─── */
+  /* ─── Perfil ─── */
   if (partes[0] === "perfil") {
-    if (!u) {
-      location.hash = "#/entrar";
-      return;
-    }
-    return placeholderEmBreve("perfil");
+    return vistaPerfil();
   }
 
-  /* ─── Placeholders ─── */
-  if (partes[0] === "recuperar") return placeholderEmBreve("recuperar");
+  /* ─── Recuperar ─── */
+  if (partes[0] === "recuperar") return vistaRecuperar();
+
+  /* ─── Placeholder genérico ─── */
   if (partes[0] === "painel") return placeholderEmBreve("painel");
 
   return vistaInicio();
 }
 
 /* ═══════════════════════════════════════════════════════════
-   PLACEHOLDER
+   PLACEHOLDER GENÉRICO
    ═══════════════════════════════════════════════════════════ */
 function placeholderEmBreve(nome) {
   $("#app").innerHTML = `

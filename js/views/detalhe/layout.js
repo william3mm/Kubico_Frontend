@@ -124,8 +124,8 @@ function templateVerifyBox(im) {
       <h2>${im.verificado ? "Imóvel verificado" : "Imóvel ainda não verificado"}</h2>
       <p>${
         im.verificado
-          ? "A nossa equipa confirmou a existência do imóvel e os documentos do proprietário. Mesmo assim, nunca faças pagamentos antes de visitar."
-          : "Ainda não confirmámos este anúncio. Visita o imóvel e confirma os documentos antes de pagar qualquer valor."
+          ? "A nossa equipa confirmou a existência do imóvel e os documentos do proprietário. Mesmo assim, marca uma visita e confirma tudo!"
+          : "Visita o imóvel e confirma os documentos antes de pagar qualquer valor."
       }</p>
     </section>`;
 }

@@ -174,3 +174,145 @@
     display: none;
   }
 }
+
+/* =========================================================
+   PERFIL PESSOAL — mobile first
+   ========================================================= */
+
+/* ─── Base: mobile (320px+) ─── */
+.perfil-page {
+  padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+.perfil-card {
+  text-align: center;
+  padding: 1.25rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  margin-bottom: 0.75rem;
+}
+
+.perfil-card__avatar {
+  display: inline-flex;
+  margin-bottom: 0.75rem;
+}
+
+.perfil-card__nome {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.25rem;
+  line-height: 1.2;
+}
+
+.perfil-card__email {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  margin: 0 0 0.75rem;
+  word-break: break-word;
+}
+
+.perfil-info {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.perfil-info__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.perfil-info__label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.perfil-info__valor {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+.perfil-suporte {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1rem;
+  text-align: center;
+}
+
+.perfil-suporte__titulo {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0 0 0.375rem;
+}
+
+.perfil-suporte__texto {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+.perfil-suporte__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+}
+
+/* ─── Estatísticas em mobile: 2 colunas ─── */
+@media (max-width: 40rem) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  /* Se quiseres 3ª linha ocupar 2: */
+  .stats-grid > :last-child:nth-child(odd) {
+    grid-column: span 2;
+  }
+}
+
+/* ─── Tablet+ (640px+) ─── */
+@media (min-width: 40rem) {
+  .perfil-page {
+    padding: 1.5rem;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .perfil-card {
+    padding: 1.5rem;
+  }
+
+  .perfil-card__nome {
+    font-size: 1.25rem;
+  }
+
+  .perfil-suporte {
+    padding: 1.5rem;
+  }
+}
+
+/* ─── Avatar XL ─── */
+.avatar--xl {
+  width: 72px;
+  height: 72px;
+  font-size: 1.5rem;
+}
+
+@media (min-width: 40rem) {
+  .avatar--xl {
+    width: 80px;
+    height: 80px;
+    font-size: 1.75rem;
+  }
+}

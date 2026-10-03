@@ -10,10 +10,8 @@ import { ligarPartilhar } from "./contacto.js";
 export async function vistaDetalhe(id) {
   const app = $("#app");
 
-  // 1. Skeleton
   app.innerHTML = `<div style="padding-top:var(--space-6)">${skeletonCards(1)}</div>`;
 
-  // 2. Carregar (público → privado)
   const im = await carregarImovel(id);
 
   if (!im) {
@@ -29,14 +27,11 @@ export async function vistaDetalhe(id) {
     return;
   }
 
-  // 3. Derivados
   const dono = ehDono(im);
   const wa = linkWhatsApp(im);
 
-  // 4. Render
   app.innerHTML = templateDetalhe(im, { ehDono: dono, wa });
 
-  // 5. Interacções
   ligarGaleria();
   if (!dono) ligarPartilhar(im);
 }

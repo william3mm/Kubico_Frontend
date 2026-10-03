@@ -1,8 +1,14 @@
 import { CONFIG } from "./config.js";
 
+/* ═══════════════════════════════════════════════════════════
+   SELECÇÃO
+   ═══════════════════════════════════════════════════════════ */
 export const $ = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
+/* ═══════════════════════════════════════════════════════════
+   FORMATAÇÃO
+   ═══════════════════════════════════════════════════════════ */
 export const esc = (s) =>
   String(s ?? "").replace(
     /[&<>"']/g,
@@ -13,7 +19,9 @@ export const esc = (s) =>
   );
 
 export const kz = (v) =>
-  `${CONFIG.MOEDA} ${(Number(v) || 0).toLocaleString("pt-AO", { maximumFractionDigits: 0 })}`;
+  `${CONFIG.MOEDA} ${(Number(v) || 0).toLocaleString("pt-AO", {
+    maximumFractionDigits: 0,
+  })}`;
 
 export const iniciais = (n) =>
   String(n || "?")
@@ -24,23 +32,52 @@ export const iniciais = (n) =>
     .join("")
     .toUpperCase();
 
-let tid;
-export function toast(texto) {
+/* ═══════════════════════════════════════════════════════════
+   TOAST (notificação temporária)
+   ═══════════════════════════════════════════════════════════ */
+let toastTimer;
+let toastHideTimer;
+
+export function toast(texto, duracao = 3000) {
   let t = document.getElementById("toast");
   if (!t) {
     t = document.createElement("div");
     t.id = "toast";
     t.className = "toast";
+    t.setAttribute("role", "status");
+    t.setAttribute("aria-live", "polite");
     document.body.appendChild(t);
   }
-  t.textContent = texto;
+
+  // Cancela timers anteriores (evita overlap entre toasts seguidos)
+  clearTimeout(toastTimer);
+  clearTimeout(toastHideTimer);
+
+  // Remove estado de saída e mostra
+  t.classList.remove("toast--sai");
   t.hidden = false;
-  clearTimeout(tid);
-  tid = setTimeout(() => {
-    t.hidden = true;
-  }, 2600);
+  t.textContent = texto;
+
+  // Força reflow para reiniciar a animação de entrada
+  t.style.animation = "none";
+  void t.offsetWidth;
+  t.style.animation = "";
+
+  // Agenda a saída suave
+  toastTimer = setTimeout(() => {
+    t.classList.add("toast--sai");
+
+    // Só esconde depois de a animação de saída terminar
+    toastHideTimer = setTimeout(() => {
+      t.hidden = true;
+      t.classList.remove("toast--sai");
+    }, 240);
+  }, duracao);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   ESTADO DE BOTÕES
+   ═══════════════════════════════════════════════════════════ */
 export function ocupado(btn, texto) {
   btn.disabled = true;
   btn.dataset.antes = btn.textContent;
@@ -51,6 +88,12 @@ export function ocupado(btn, texto) {
   };
 }
 
+/* ═══════════════════════════════════════════════════════════
+   CAIXAS DE ERRO (formulários)
+   ═══════════════════════════════════════════════════════════ */
+export const caixaErro = (id) =>
+  `<div id="${id}" class="form-error" hidden></div>`;
+
 export function erroCaixa(id, msg) {
   const b = document.getElementById(id);
   if (!b) return;
@@ -58,9 +101,9 @@ export function erroCaixa(id, msg) {
   b.hidden = false;
 }
 
-export const caixaErro = (id) =>
-  `<div id="${id}" class="form-error" hidden></div>`;
-
+/* ═══════════════════════════════════════════════════════════
+   CAMPOS DE SENHA
+   ═══════════════════════════════════════════════════════════ */
 export function ligarOlhos(raiz = document) {
   raiz.querySelectorAll("[data-olho]").forEach(
     (b) =>
@@ -70,7 +113,8 @@ export function ligarOlhos(raiz = document) {
         const ver = inp.type === "password";
         inp.type = ver ? "text" : "password";
         b.setAttribute("aria-label", ver ? "Esconder senha" : "Mostrar senha");
-        b.querySelector("svg").style.opacity = ver ? "1" : ".55";
+        const svg = b.querySelector("svg");
+        if (svg) svg.style.opacity = ver ? "1" : ".55";
       }),
   );
 }

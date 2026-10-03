@@ -2,8 +2,9 @@ import { $, $$, esc, ocupado, erroCaixa, caixaErro, toast } from "../utils.js";
 import { api } from "../api.js";
 import { CONFIG } from "../config.js";
 import { TIPOS, LABELS_TIPO, INFRA_OPCOES } from "../data/imovel_opcoes.js";
+import { templateFotos, ligarFotos } from "./detalhe/fotos.js";
+import loggerFront from "../../logs/logger.js";
 
-/* Províncias onde aceitamos publicações (por NOME — robusto a siglas diferentes) */
 const PROVINCIAS_ACTIVAS = ["Luanda", "Bengo"];
 
 export async function vistaPublicar(params = new URLSearchParams()) {
@@ -11,37 +12,105 @@ export async function vistaPublicar(params = new URLSearchParams()) {
   const idEditar = params.get("editar");
   const modoEdicao = !!idEditar;
 
-  /* ─── 1. Carregar o imóvel se for edição ─── */
-  let im = null;
+  /* ─── 1. Carregar imóvel (só em edição) ─── */
+  const im = modoEdicao ? await carregarParaEdicao(app, idEditar) : null;
+  if (modoEdicao && !im) return;
 
+  /* ─── 2. Carregar e agrupar municípios ─── */
+  const { provincias, listaProvincias } = await carregarProvincias();
+
+  /* ─── 3. Descobrir província inicial (edição) ─── */
+  const provinciaInicial =
+    descobrirProvincia(im, listaProvincias) || listaProvincias[0]?.nome || "";
+
+  /* ─── 4. Valores iniciais ─── */
+  const v = valoresIniciais(im);
+
+  /* ─── 5. Render ─── */
+  app.innerHTML = templatePagina({
+    modoEdicao,
+    im,
+    v,
+    listaProvincias,
+    provinciaInicial,
+  });
+
+  /* ─── 6. Comportamentos ─── */
+  const form = $("#f-publicar");
+  const selectProvincia = $("#select-provincia");
+  const selectMunicipio = $("#select-municipio");
+
+  preencherMunicipios(
+    selectMunicipio,
+    provincias,
+    provinciaInicial,
+    v.municipioId,
+  );
+
+  selectProvincia.addEventListener("change", () => {
+    preencherMunicipios(selectMunicipio, provincias, selectProvincia.value);
+  });
+
+  ligarRadios(form);
+  ligarSubmissao(form, { modoEdicao, idEditar });
+
+  /* ─── 7. Gestão de fotos (só em edição) ─── */
   if (modoEdicao) {
-    try {
-      im = await api.buscarImovel(idEditar);
-    } catch (erro) {
-      console.error("Erro ao carregar imóvel:", erro);
-      app.innerHTML = `
-        <div class="fade-in" style="padding-top:var(--space-6)">
-          <div class="empty">
-            <p class="empty__title">Imóvel não encontrado</p>
-            <p class="empty__text">Pode ter sido apagado ou já não está disponível.</p>
-            <a href="#/gestao/imoveis" class="btn btn-primary">Voltar ao painel</a>
-          </div>
-        </div>`;
-      return;
-    }
+    ligarFotos(im, {
+      onMudar: () => vistaPublicar(params),
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CARREGAMENTO
+   ═══════════════════════════════════════════════════════════ */
+async function carregarParaEdicao(app, idEditar) {
+  try {
+    const im = await api.buscarImovel(idEditar);
+    loggerFront.debug("Editar: carregado via público", { id: idEditar });
+    return im;
+  } catch (err) {
+    loggerFront.debug("Editar: público falhou, tentar privado", {
+      id: idEditar,
+      status: err?.status,
+    });
   }
 
-  /* ─── 2. Carregar municípios ─── */
+  try {
+    const r = await api.meuImovel(idEditar);
+    loggerFront.debug("Editar: carregado via privado", { id: idEditar });
+    return r.imovel || r;
+  } catch (err2) {
+    loggerFront.error("Editar: falha ao carregar imóvel", err2, {
+      id: idEditar,
+      rota: "vistaPublicar/editar",
+    });
+
+    app.innerHTML = `
+      <div class="fade-in" style="padding-top:var(--space-6)">
+        <div class="empty">
+          <p class="empty__title">Imóvel não encontrado</p>
+          <p class="empty__text">Pode ter sido apagado ou já não está disponível.</p>
+          <a href="#/gestao/imoveis" class="btn btn-primary">Voltar ao painel</a>
+        </div>
+      </div>`;
+    return null;
+  }
+}
+
+async function carregarProvincias() {
   let todosMunicipios = [];
   try {
     const r = await api.municipios();
     todosMunicipios = r.municipios || r.data || [];
   } catch (err) {
-    console.error("Erro ao carregar municípios:", err);
+    loggerFront.error("Falha ao carregar municípios", err, {
+      rota: "vistaPublicar/municipios",
+    });
   }
 
-  /* ─── 3. Agrupar municípios por NOME de província ─── */
-  const provincias = new Map(); // nome → { id, nome, sigla, municipios[] }
+  const provincias = new Map();
 
   for (const m of todosMunicipios) {
     const p = m.provincia;
@@ -58,29 +127,26 @@ export async function vistaPublicar(params = new URLSearchParams()) {
     provincias.get(p.nome).municipios.push(m);
   }
 
-  /* ─── 4. Filtrar só as províncias activas (por nome) ─── */
   const listaProvincias = [...provincias.values()]
     .filter((p) => PROVINCIAS_ACTIVAS.includes(p.nome))
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
 
-  /* ─── 5. Descobrir província do imóvel (se edição) ─── */
-  let provinciaInicial = "";
+  return { provincias, listaProvincias };
+}
 
-  if (modoEdicao && im?.municipioId) {
-    for (const p of listaProvincias) {
-      if (p.municipios.some((m) => Number(m.id) === Number(im.municipioId))) {
-        provinciaInicial = p.nome;
-        break;
-      }
+function descobrirProvincia(im, listaProvincias) {
+  if (!im?.municipioId) return "";
+
+  for (const p of listaProvincias) {
+    if (p.municipios.some((m) => Number(m.id) === Number(im.municipioId))) {
+      return p.nome;
     }
   }
+  return "";
+}
 
-  if (!provinciaInicial && listaProvincias.length) {
-    provinciaInicial = listaProvincias[0].nome;
-  }
-
-  /* ─── 6. Valores iniciais ─── */
-  const v = {
+function valoresIniciais(im) {
+  return {
     titulo: im?.titulo || "",
     tipo: im?.tipo || "APARTAMENTO",
     tipoTransacao: im?.tipoTransacao || "ARRENDAMENTO",
@@ -95,9 +161,19 @@ export async function vistaPublicar(params = new URLSearchParams()) {
       ? im.infraestruturas
       : [],
   };
+}
 
-  /* ─── 7. Render ─── */
-  app.innerHTML = `
+/* ═══════════════════════════════════════════════════════════
+   TEMPLATE
+   ═══════════════════════════════════════════════════════════ */
+function templatePagina({
+  modoEdicao,
+  im,
+  v,
+  listaProvincias,
+  provinciaInicial,
+}) {
+  return `
     <div class="form-page fade-in">
 
       <a href="#/gestao/imoveis" class="detail-back">
@@ -112,7 +188,7 @@ export async function vistaPublicar(params = new URLSearchParams()) {
       <p class="muted text-sm" style="margin-top:.375rem;line-height:1.6">
         ${
           modoEdicao
-            ? "Altera o que precisares. As fotos são geridas num próximo passo."
+            ? "Altera os dados do imóvel. As fotos são geridas abaixo."
             : "Preenche o essencial. Depois de publicares, a equipa confirma os dados e o anúncio recebe o selo de verificado."
         }
       </p>
@@ -240,12 +316,9 @@ export async function vistaPublicar(params = new URLSearchParams()) {
         ${
           modoEdicao
             ? `
-          <fieldset class="fieldset">
+          <fieldset class="fieldset fieldset--fotos">
             <legend>Fotos</legend>
-            <p class="muted text-sm" style="line-height:1.6">
-              A gestão de fotos (adicionar, remover, reordenar) será feita na
-              próxima ronda. Para já, podes alterar os dados do imóvel aqui.
-            </p>
+            ${templateFotos(im, { ehDono: true })}
           </fieldset>`
             : `
           <fieldset class="fieldset">
@@ -289,36 +362,36 @@ export async function vistaPublicar(params = new URLSearchParams()) {
         }
       </form>
     </div>`;
+}
 
-  const form = $("#f-publicar");
+/* ═══════════════════════════════════════════════════════════
+   MUNICÍPIOS
+   ═══════════════════════════════════════════════════════════ */
+function preencherMunicipios(
+  select,
+  provincias,
+  nomeProvincia,
+  valorSelecionado = "",
+) {
+  const p = provincias.get(nomeProvincia);
+  const lista = p?.municipios || [];
+
+  select.innerHTML = `
+    <option value="">Escolhe o município</option>
+    ${lista
+      .map(
+        (m) =>
+          `<option value="${m.id}" ${Number(valorSelecionado) === Number(m.id) ? "selected" : ""}>${esc(m.nome)}</option>`,
+      )
+      .join("")}`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RADIOS
+   ═══════════════════════════════════════════════════════════ */
+function ligarRadios(form) {
   const nota = $("#nota-preco");
-  const selectProvincia = $("#select-provincia");
-  const selectMunicipio = $("#select-municipio");
 
-  /* ─── Preencher municípios conforme a província escolhida ─── */
-  function preencherMunicipios(nomeProvincia, valorSelecionado = "") {
-    const p = provincias.get(nomeProvincia);
-    const lista = p?.municipios || [];
-
-    selectMunicipio.innerHTML = `
-      <option value="">Escolhe o município</option>
-      ${lista
-        .map(
-          (m) =>
-            `<option value="${m.id}" ${Number(valorSelecionado) === Number(m.id) ? "selected" : ""}>${esc(m.nome)}</option>`,
-        )
-        .join("")}`;
-  }
-
-  /* ─── Preencher logo no arranque ─── */
-  preencherMunicipios(provinciaInicial, v.municipioId);
-
-  /* ─── Ao mudar de província, recarregar municípios ─── */
-  selectProvincia.addEventListener("change", () => {
-    preencherMunicipios(selectProvincia.value);
-  });
-
-  /* ─── Alternar visual dos radios de transacção ─── */
   $$('input[name="tipoTransacao"]', form).forEach((r) =>
     r.addEventListener("change", () => {
       $$(".option", form).forEach((o) => {
@@ -329,8 +402,12 @@ export async function vistaPublicar(params = new URLSearchParams()) {
         r.value === "ARRENDAMENTO" ? "(por mês)" : "(valor total)";
     }),
   );
+}
 
-  /* ─── Submissão ─── */
+/* ═══════════════════════════════════════════════════════════
+   SUBMISSÃO
+   ═══════════════════════════════════════════════════════════ */
+function ligarSubmissao(form, { modoEdicao, idEditar }) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const d = new FormData(form);
@@ -348,7 +425,6 @@ export async function vistaPublicar(params = new URLSearchParams()) {
       return;
     }
 
-    /* Campos opcionais: "" se vazio, número se preenchido */
     const numOuVazio = (k) => {
       const raw = String(d.get(k) ?? "").trim();
       return raw === "" ? "" : Number(raw);
@@ -375,6 +451,7 @@ export async function vistaPublicar(params = new URLSearchParams()) {
       if (modoEdicao) {
         await api.editarImovel(idEditar, payload);
         toast("Alterações guardadas");
+        loggerFront.info("Imóvel editado com sucesso", { id: idEditar });
         location.hash = "#/gestao/imoveis";
       } else {
         const fich = form.querySelector('[name="ficheiros"]')?.files || [];
@@ -406,14 +483,21 @@ export async function vistaPublicar(params = new URLSearchParams()) {
 
         [...fich].forEach((f) => fd.append("fotos", f));
 
-        await api.publicarConteudo(fd);
+        const r = await api.publicarConteudo(fd);
         toast("Imóvel publicado");
+        loggerFront.info("Imóvel publicado", { id: r?.imovel?.id });
         location.hash = "#/gestao/imoveis";
       }
     } catch (err) {
       solta();
       const msg = err.dados?.erro || err.message || "Não foi possível guardar.";
       erroCaixa("erro-publicar", msg);
+
+      loggerFront.error("Falha ao guardar imóvel", err, {
+        modo: modoEdicao ? "edicao" : "criacao",
+        id: idEditar,
+        status: err?.status,
+      });
     }
   });
 }

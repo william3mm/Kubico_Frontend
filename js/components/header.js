@@ -16,7 +16,9 @@ export function desenharHeader() {
 
   // URL da área pessoal conforme o tipo
   const href =
-    u.tipo === "PROPRIETARIO" || u.tipo === "ADMIN" ? "#/gestao" : "#/perfil";
+    u.tipo === "PROPRIETARIO" || u.tipo === "ADMIN"
+      ? "#/gestao/dados"
+      : "#/perfil";
 
   box.innerHTML = `
     <div class="header-user" id="header-user">

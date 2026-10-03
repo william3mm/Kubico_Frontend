@@ -2,6 +2,7 @@ import { $, $$, esc } from "../utils.js";
 import { grelhaImoveis, skeletonCards } from "../components/cards.js";
 import { empty } from "../components/feedback.js";
 import { listarImoveis } from "../api.js";
+import loggerFront from "../../logs/logger.js";
 
 /* ─── Layout HTML (recebe o estado actual) ─── */
 function layout(f, dados) {
@@ -240,7 +241,16 @@ export async function vistaListagem(params) {
 
   // 4. Pedir ao backend
   try {
+    loggerFront.debug("A carregar listagem de imóveis", {
+      filtros: f,
+    });
+
     const resultado = await listarImoveis(f);
+
+    loggerFront.info("Listagem carregada", {
+      total: resultado.total || 0,
+      mostrados: resultado.imoveis?.length || 0,
+    });
 
     app.innerHTML = layout(f, {
       carregado: true,
@@ -250,7 +260,11 @@ export async function vistaListagem(params) {
 
     ligarEventos(f, params);
   } catch (erro) {
-    console.error("Erro ao carregar imóveis:", erro);
+    loggerFront.error("Falha ao carregar listagem", erro, {
+      rota: "vistaListagem",
+      filtros: f,
+      status: erro?.status,
+    });
 
     app.innerHTML = `
       <div class="fade-in">

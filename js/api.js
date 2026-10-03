@@ -97,4 +97,23 @@ export const api = {
 
   /* ─── Localização ─── */
   municipios: () => fetchApi(ROTAS_API.municipios),
+
+  /* ─── Fotos (dono) ─── */
+  adicionarFotos: (id, formData) =>
+    fetchApi(`${ROTAS_API.imoveis}/${encodeURIComponent(id)}/fotos`, {
+      metodo: "POST",
+      formData,
+    }),
+
+  apagarFoto: (id, nomeFoto) =>
+    fetchApi(
+      `${ROTAS_API.imoveis}/${encodeURIComponent(id)}/fotos/${encodeURIComponent(nomeFoto)}`,
+      { metodo: "DELETE" },
+    ),
+
+  reordenarFotos: (id, ordem) =>
+    fetchApi(`${ROTAS_API.imoveis}/${encodeURIComponent(id)}/fotos/ordem`, {
+      metodo: "PUT",
+      corpo: { ordem },
+    }),
 };

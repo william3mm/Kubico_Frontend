@@ -41,17 +41,23 @@
 }
 
 /* Contador dentro do chip de filtros */
+/* Contador dentro do chip de filtros */
 .chip__count {
-  display: inline-grid;
-  place-items: center;
-  width: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
   height: 1.25rem;
+  padding-inline: 0.375rem;
   border-radius: var(--radius-full);
   background: var(--brand);
   color: #fff;
   font-size: 0.6875rem;
   font-weight: 700;
-  margin-left: var(--space-1);
+  line-height: 1;
+  margin-left: 0.375rem;
+  vertical-align: middle;
+  flex-shrink: 0;
 }
 
 /* =========================================================

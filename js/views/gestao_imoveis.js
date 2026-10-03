@@ -3,6 +3,7 @@ import { api } from "../api.js";
 import { empty } from "../components/feedback.js";
 import { capaMini, urlFoto } from "../components/cards.js";
 import loggerFront from "../../logs/logger.js";
+import { abrirModal } from "../components/modal.js";
 
 const ESTADOS = {
   publicado: { txt: "Publicado", cls: "badge--verified" },
@@ -128,9 +129,15 @@ function ligarAccoes(imoveis) {
         return;
       }
 
-      const ok = confirm(
-        `Apagar "${im.titulo}"?\n\nEsta acção não pode ser desfeita. As fotos também serão removidas.`,
-      );
+      const ok = await abrirModal({
+        titulo: `Apagar "${im.titulo}"?`,
+        descricao:
+          "Esta acção não pode ser desfeita. As fotos também serão removidas do servidor.",
+        confirmar: "Apagar",
+        cancelar: "Cancelar",
+        perigoso: true,
+      });
+
       if (!ok) {
         loggerFront.debug("Apagar cancelado pelo utilizador", { id });
         return;
