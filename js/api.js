@@ -90,9 +90,30 @@ export const api = {
 
   /* ─── Gestão (dono) ─── */
   meusImoveis: () => fetchApi(ROTAS_API.gestaoImoveis),
+  meuImovel: (id) =>
+    fetchApi(`${ROTAS_API.gestaoImoveis}/${encodeURIComponent(id)}`),
 
   perfil: (corpo) => fetchApi(ROTAS_API.perfil, { metodo: "PUT", corpo }),
 
   /* ─── Localização ─── */
   municipios: () => fetchApi(ROTAS_API.municipios),
+
+  /* ─── Fotos (dono) ─── */
+  adicionarFotos: (id, formData) =>
+    fetchApi(`${ROTAS_API.imoveis}/${encodeURIComponent(id)}/fotos`, {
+      metodo: "POST",
+      formData,
+    }),
+
+  apagarFoto: (id, nomeFoto) =>
+    fetchApi(
+      `${ROTAS_API.imoveis}/${encodeURIComponent(id)}/fotos/${encodeURIComponent(nomeFoto)}`,
+      { metodo: "DELETE" },
+    ),
+
+  reordenarFotos: (id, ordem) =>
+    fetchApi(`${ROTAS_API.imoveis}/${encodeURIComponent(id)}/fotos/ordem`, {
+      metodo: "PUT",
+      corpo: { ordem },
+    }),
 };

@@ -3,6 +3,7 @@ import { sessao } from "../state.js";
 import { grelhaImoveis, skeletonCards } from "../components/cards.js";
 import { empty } from "../components/feedback.js";
 import { listarImoveis } from "../api.js";
+import loggerFront from "../../logs/logger.js";
 
 /* ═══════════════════════════════════════════════════════════
    VISTA PRINCIPAL
@@ -15,6 +16,8 @@ export async function vistaInicio() {
 
   // 2. Pedir os últimos 9 imóveis
   try {
+    loggerFront.debug("A carregar home (últimos imóveis)");
+
     const resultado = await listarImoveis({ limit: "9", page: "1" });
 
     const imoveis = resultado.imoveis || [];
@@ -22,9 +25,19 @@ export async function vistaInicio() {
       .sort()
       .slice(0, 7);
 
+    loggerFront.info("Home carregada", {
+      total: resultado.total || 0,
+      mostrados: imoveis.length,
+      zonas: zonas.length,
+    });
+
     app.innerHTML = layout({ carregado: true, imoveis, zonas });
   } catch (erro) {
-    console.error("Erro ao carregar home:", erro);
+    loggerFront.error("Falha ao carregar home", erro, {
+      rota: "vistaInicio",
+      status: erro?.status,
+    });
+
     app.innerHTML = layout({ carregado: true, imoveis: [], zonas: [] });
   }
 

@@ -339,3 +339,112 @@ h4 {
     transform: none;
   }
 }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(
+    var(--tabbar-h, 4.5rem) + env(safe-area-inset-bottom, 0px) + 1rem
+  );
+  transform: translateX(-50%);
+
+  max-width: min(calc(100vw - 2rem), 22rem);
+  width: max-content;
+  padding: 0.75rem 1.25rem;
+  background: rgba(20, 20, 22, 0.96);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  border-radius: var(--radius-full);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  z-index: 100;
+  text-align: center;
+  pointer-events: none;
+  word-break: break-word;
+
+  /* Entrada */
+  animation: toast-entra 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  -webkit-font-smoothing: antialiased;
+}
+
+.toast[hidden] {
+  display: none;
+}
+
+/* Saída — 240ms, encolhe e desvanece */
+.toast.toast--sai {
+  animation: toast-sai 0.24s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes toast-entra {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-sai {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scale(0.96);
+  }
+}
+
+/* Mobile com teclado aberto */
+@media (max-height: 30rem) {
+  .toast {
+    bottom: 1rem;
+  }
+}
+
+/* Tablet / Desktop */
+@media (min-width: 40rem) {
+  .toast {
+    bottom: 2rem;
+    max-width: 24rem;
+  }
+}
+
+/* Acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast.toast--sai {
+    animation: none;
+  }
+}
+.toast.toast--sai {
+  animation: toast-sai 0.24s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes toast-sai {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast.toast--sai {
+    animation: none;
+  }
+}

@@ -182,7 +182,7 @@ export function vistaVerificar(params) {
 
       // O token já vem no cookie HttpOnly — só guardamos o utilizador
       if (u) {
-        sessao.guardar("cookie-auth", u);
+        sessao.guardar(u);
       }
 
       toast("Conta confirmada com sucesso");

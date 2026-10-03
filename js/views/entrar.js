@@ -84,7 +84,7 @@ export function vistaEntrar() {
       const u = r?.usuario || r?.utilizador || r?.user;
 
       if (u) {
-        sessao.guardar("cookie-auth", u);
+        sessao.guardar(u);
       }
 
       toast("Bem-vindo");
