@@ -1,5 +1,5 @@
 export const CONFIG = {
-  API_BASE: "http://localhost:3002",
+  API_BASE: "",
   SITE: "Kubiko",
   MOEDA: "Kz",
   WHATSAPP: "244923000000",
