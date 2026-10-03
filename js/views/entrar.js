@@ -46,7 +46,7 @@ export function vistaEntrar() {
 
           <label class="check-row">
             <input type="checkbox" name="manter" checked>
-            <span>Manter a sessão aberta neste telemóvel</span>
+            <span>Manter a sessão aberta neste dispositivo</span>
           </label>
 
           ${caixaErro("erro-entrar")}
