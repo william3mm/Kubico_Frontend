@@ -2,6 +2,7 @@ import { $, $$, esc, kz, toast, ocupado } from "../utils.js";
 import { api } from "../api.js";
 import { empty } from "../components/feedback.js";
 import { capaMini, urlFoto } from "../components/cards.js";
+import loggerFront from "../../logs/logger.js";
 
 const ESTADOS = {
   publicado: { txt: "Publicado", cls: "badge--verified" },
@@ -14,13 +15,26 @@ const ESTADOS = {
 export async function vistaGestaoImoveis(alvo, user) {
   alvo.innerHTML = `<p class="muted">A carregar imóveis…</p>`;
 
+  loggerFront.debug("A carregar imóveis do proprietário", {
+    usuarioId: user?.id,
+  });
+
   let imoveis = [];
 
   try {
     const r = await api.meusImoveis();
     imoveis = r.imoveis || r.data || [];
+
+    loggerFront.info("Imóveis carregados", {
+      total: imoveis.length,
+      usuarioId: user?.id,
+    });
   } catch (erro) {
-    console.error("Erro ao carregar imóveis:", erro);
+    loggerFront.error("Falha ao carregar imóveis", erro, {
+      usuarioId: user?.id,
+      rota: "vistaGestaoImoveis",
+    });
+
     alvo.innerHTML = empty({
       titulo: "Não foi possível carregar os teus imóveis",
       texto: "Verifica a ligação ao servidor.",
@@ -30,6 +44,8 @@ export async function vistaGestaoImoveis(alvo, user) {
   }
 
   if (!imoveis.length) {
+    loggerFront.debug("Sem imóveis para mostrar", { usuarioId: user?.id });
+
     alvo.innerHTML = empty({
       titulo: "Ainda não tens anúncios",
       texto: "Publica o primeiro imóvel e começa a receber contactos.",
@@ -95,7 +111,9 @@ function ligarAccoes(imoveis) {
   // Editar → redirecciona para #/publicar?editar=:id
   $$("[data-editar]").forEach((b) => {
     b.onclick = () => {
-      location.hash = `#/publicar?editar=${encodeURIComponent(b.dataset.editar)}`;
+      const id = b.dataset.editar;
+      loggerFront.debug("Abrir edição de imóvel", { id });
+      location.hash = `#/publicar?editar=${encodeURIComponent(id)}`;
     };
   });
 
@@ -104,12 +122,21 @@ function ligarAccoes(imoveis) {
     b.onclick = async () => {
       const id = b.dataset.apagar;
       const im = imoveis.find((x) => String(x.id) === String(id));
-      if (!im) return;
+
+      if (!im) {
+        loggerFront.warn("Imóvel não encontrado para apagar", { id });
+        return;
+      }
 
       const ok = confirm(
         `Apagar "${im.titulo}"?\n\nEsta acção não pode ser desfeita. As fotos também serão removidas.`,
       );
-      if (!ok) return;
+      if (!ok) {
+        loggerFront.debug("Apagar cancelado pelo utilizador", { id });
+        return;
+      }
+
+      loggerFront.info("A apagar imóvel", { id, titulo: im.titulo });
 
       const solta = ocupado(b, "A apagar…");
 
@@ -117,12 +144,16 @@ function ligarAccoes(imoveis) {
         await api.apagarImovel(id);
         toast("Imóvel apagado");
 
+        loggerFront.info("Imóvel apagado com sucesso", { id });
+
         // Remover do DOM sem recarregar
         const card = b.closest(".gestao-imovel");
         card?.remove();
 
         // Se ficou vazio, mostra o empty state
         if (!document.querySelector(".gestao-imovel")) {
+          loggerFront.debug("Lista ficou vazia após apagar", { id });
+
           const alvo = document.getElementById("gestao-view");
           alvo.innerHTML = empty({
             titulo: "Ainda não tens anúncios",
@@ -134,6 +165,13 @@ function ligarAccoes(imoveis) {
         solta();
         const msg = err.dados?.erro || "Não foi possível apagar o imóvel.";
         toast(msg);
+
+        loggerFront.error("Falha ao apagar imóvel", err, {
+          id,
+          titulo: im.titulo,
+          status: err?.status,
+          rota: "ligarAccoes/apagar",
+        });
       }
     };
   });

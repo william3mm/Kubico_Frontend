@@ -4,7 +4,7 @@ import { desenharHeader, desenharTabbar } from "./components/header.js";
 
 import { vistaInicio } from "./views/home.js";
 import { vistaListagem } from "./views/listagem.js";
-import { vistaDetalhe } from "./views/detalhe.js";
+import { vistaDetalhe } from "./views/detalhe/index.js";
 import { vistaPublicar } from "./views/publicar.js";
 import { vistaEntrar } from "./views/entrar.js";
 import { vistaRegistar } from "./views/registar.js";
@@ -34,9 +34,17 @@ function router() {
   const u = sessao.user;
 
   /* ─── Modo gestão ───
-     /gestao/* ou /publicar?editar=*
+     /gestao/*, /publicar?editar=*
+     ou /imovel/:id quando vens da gestão
      O CSS esconde nav/footer/tabbar quando o body tem esta classe */
-  const emGestao = partes[0] === "gestao" || partes[0] === "publicar";
+  const rotaAnterior = sessionStorage.getItem("kubiko_rota_anterior") || "";
+  const vemDaGestao = rotaAnterior.startsWith("#/gestao");
+
+  const emGestao =
+    partes[0] === "gestao" ||
+    partes[0] === "publicar" ||
+    (partes[0] === "imovel" && vemDaGestao);
+
   document.body.classList.toggle("rota-gestao", emGestao);
 
   /* ─── Guarda a última rota (excepto imóvel individual) ─── */

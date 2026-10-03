@@ -90,6 +90,8 @@ export const api = {
 
   /* ─── Gestão (dono) ─── */
   meusImoveis: () => fetchApi(ROTAS_API.gestaoImoveis),
+  meuImovel: (id) =>
+    fetchApi(`${ROTAS_API.gestaoImoveis}/${encodeURIComponent(id)}`),
 
   perfil: (corpo) => fetchApi(ROTAS_API.perfil, { metodo: "PUT", corpo }),
 
