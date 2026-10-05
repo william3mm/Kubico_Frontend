@@ -12,18 +12,14 @@ export async function vistaPublicar(params = new URLSearchParams()) {
   const idEditar = params.get("editar");
   const modoEdicao = !!idEditar;
 
-  /* ─── 1. Carregar imóvel (só em edição) ─── */
   const im = modoEdicao ? await carregarParaEdicao(app, idEditar) : null;
   if (modoEdicao && !im) return;
 
-  /* ─── 2. Carregar e agrupar municípios ─── */
   const { provincias, listaProvincias } = await carregarProvincias();
 
-  /* ─── 3. Descobrir província inicial (edição) ─── */
   const provinciaInicial =
     descobrirProvincia(im, listaProvincias) || listaProvincias[0]?.nome || "";
 
-  /* ─── 4. Valores iniciais ─── */
   const v = valoresIniciais(im);
 
   /* ─── 5. Render ─── */
@@ -425,9 +421,10 @@ function ligarSubmissao(form, { modoEdicao, idEditar }) {
       return;
     }
 
-    const numOuVazio = (k) => {
+    // ⬇️ MUDANÇA: "" → null
+    const numOuNull = (k) => {
       const raw = String(d.get(k) ?? "").trim();
-      return raw === "" ? "" : Number(raw);
+      return raw === "" ? null : Number(raw);
     };
 
     const payload = {
@@ -437,9 +434,9 @@ function ligarSubmissao(form, { modoEdicao, idEditar }) {
       zona: d.get("zona").trim(),
       municipioId: Number(d.get("municipio_id")),
       preco: Number(d.get("preco")),
-      quartos: numOuVazio("quartos"),
-      banheiros: numOuVazio("banheiros"),
-      area: numOuVazio("area"),
+      quartos: numOuNull("quartos"),
+      banheiros: numOuNull("banheiros"),
+      area: numOuNull("area"),
       descricao: (d.get("descricao") || "").trim(),
       infraestruturas: d.getAll("infraestruturas"),
     };
